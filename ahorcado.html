@@ -1,0 +1,1796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Juego del Ahorcado</title>
+  <style>
+    :root {
+      --bg-primary: #0f111a;
+      --bg-card: #181c2b;
+      --bg-card-light: #23283b;
+      --accent-gold: #fbbf24;
+      --accent-green: #10b981;
+      --accent-red: #ef4444;
+      --accent-cyan: #06b6d4;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --border-color: #2d3748;
+      --btn-bg: #2a324b;
+      --btn-hover: #374263;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      padding-bottom: 20px;
+    }
+
+    /* Top Navigation / Header */
+    header {
+      background: linear-gradient(180deg, #161b2c 0%, rgba(22, 27, 44, 0.8) 100%);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-gold);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #0f111a;
+      font-weight: 900;
+      font-size: 18px;
+      box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+    }
+
+    .brand h1 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #fbbf24, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+
+    .icon-btn:hover {
+      background: var(--btn-hover);
+      border-color: var(--accent-gold);
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 800px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Selectors Bar: Categories & Difficulties */
+    .controls-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 130px;
+    }
+
+    .control-group label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--accent-gold);
+    }
+
+    select {
+      background: var(--bg-card-light);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    select:focus {
+      border-color: var(--accent-gold);
+    }
+
+    /* Stats summary strip */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .stat-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .stat-pill .val {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .stat-pill .lbl {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    /* Canvas & Gallows container */
+    .stage-section {
+      background: radial-gradient(circle at center, #1e2438 0%, #131725 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+
+    .stage-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      padding: 0 4px;
+    }
+
+    .category-badge {
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      color: var(--accent-gold);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .attempts-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .attempts-badge span {
+      font-weight: 900;
+      color: var(--accent-cyan);
+    }
+
+    .attempts-badge.danger span {
+      color: var(--accent-red);
+      animation: pulseText 1s infinite;
+    }
+
+    @keyframes pulseText {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    #hangmanCanvas {
+      width: 220px;
+      height: 180px;
+      max-width: 100%;
+      display: block;
+    }
+
+    /* Word Display */
+    .word-area {
+      margin-top: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px 8px;
+      min-height: 48px;
+      padding: 8px;
+    }
+
+    .letter-slot {
+      width: 34px;
+      height: 44px;
+      border-bottom: 3.5px solid var(--accent-gold);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 6px 6px 2px 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #fff;
+      text-transform: uppercase;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .letter-slot.revealed {
+      background: rgba(16, 185, 129, 0.18);
+      border-bottom-color: var(--accent-green);
+      animation: popLetter 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .letter-slot.space {
+      width: 14px;
+      border-bottom: none;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    @keyframes popLetter {
+      0% { transform: scale(0.6); opacity: 0.3; }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Virtual Keyboard */
+    .keyboard-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 10px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: var(--shadow);
+    }
+
+    .keyboard-row {
+      display: flex;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .key-btn {
+      flex: 1;
+      max-width: 42px;
+      height: 44px;
+      min-width: 26px;
+      background: var(--btn-bg);
+      border: 1px solid #3d4768;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 0 #1b2031;
+      transition: transform 0.08s, background-color 0.15s, border-color 0.15s;
+    }
+
+    .key-btn:active:not(:disabled) {
+      transform: translateY(3px);
+      box-shadow: 0 0 0 #1b2031;
+    }
+
+    .key-btn.correct {
+      background: #065f46 !important;
+      border-color: var(--accent-green) !important;
+      color: #a7f3d0 !important;
+      box-shadow: 0 2px 0 #022c22 !important;
+      cursor: not-allowed;
+      opacity: 0.9;
+    }
+
+    .key-btn.wrong {
+      background: #4c1d24 !important;
+      border-color: #991b1b !important;
+      color: #fca5a5 !important;
+      box-shadow: 0 2px 0 #280a0e !important;
+      cursor: not-allowed;
+      opacity: 0.45;
+      text-decoration: line-through;
+    }
+
+    /* Bottom utilities */
+    .utility-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .utility-btn {
+      flex: 1;
+      background: var(--bg-card-light);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .utility-btn:hover {
+      background: var(--btn-hover);
+      border-color: var(--accent-gold);
+    }
+
+    .utility-btn.primary {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #0f111a;
+      border: none;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+    }
+
+    .utility-btn.primary:hover {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      transform: translateY(-1px);
+    }
+
+    /* FULLSCREEN OVERLAYS (VICTORY & DEFEAT) */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 24px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    /* DEFEAT OVERLAY */
+    .overlay.defeat {
+      background: radial-gradient(circle, #2a0808 0%, #0d0101 80%, #000 100%);
+      color: #fee2e2;
+      animation: fadeInScreen 0.4s ease-out;
+    }
+
+    .defeat-skull-container {
+      width: 180px;
+      height: 180px;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 0 25px rgba(239, 68, 68, 0.85));
+      animation: skullBounce 1.5s infinite alternate ease-in-out;
+    }
+
+    @keyframes skullBounce {
+      0% { transform: scale(0.96) rotate(-2deg); }
+      100% { transform: scale(1.04) rotate(2deg); }
+    }
+
+    .defeat-title {
+      font-size: 2.5rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: #ef4444;
+      text-transform: uppercase;
+      text-shadow: 0 0 15px rgba(239, 68, 68, 0.9), 0 0 35px rgba(185, 28, 28, 0.8);
+      margin-bottom: 8px;
+      animation: shakeText 0.6s ease-in-out;
+    }
+
+    @keyframes shakeText {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    .defeat-sub {
+      font-size: 1.05rem;
+      color: #fca5a5;
+      margin-bottom: 18px;
+    }
+
+    .revealed-word-box {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid #7f1d1d;
+      padding: 10px 20px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .revealed-word-box span {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .revealed-word-box strong {
+      font-size: 1.6rem;
+      letter-spacing: 2px;
+      color: #fbbf24;
+      text-transform: uppercase;
+    }
+
+    /* VICTORY OVERLAY */
+    .overlay.victory {
+      background: radial-gradient(circle, rgba(6, 78, 59, 0.95) 0%, rgba(6, 30, 24, 0.97) 80%, #03130e 100%);
+      color: #d1fae5;
+      animation: fadeInScreen 0.4s ease-out;
+    }
+
+    #confettiCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 101;
+    }
+
+    .victory-badge {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 35px rgba(251, 191, 36, 0.8);
+      margin-bottom: 16px;
+      z-index: 102;
+      animation: popBadge 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .victory-badge svg {
+      width: 58px;
+      height: 58px;
+      fill: #111827;
+    }
+
+    @keyframes popBadge {
+      0% { transform: scale(0); rotate: -180deg; }
+      100% { transform: scale(1); rotate: 0deg; }
+    }
+
+    .victory-title {
+      font-size: 2.3rem;
+      font-weight: 900;
+      color: #fbbf24;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 20px rgba(251, 191, 36, 0.6);
+      margin-bottom: 8px;
+      z-index: 102;
+    }
+
+    .victory-sub {
+      font-size: 1.05rem;
+      color: #a7f3d0;
+      margin-bottom: 20px;
+      z-index: 102;
+    }
+
+    .overlay-actions {
+      display: flex;
+      gap: 12px;
+      z-index: 102;
+    }
+
+    .action-btn {
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-red {
+      background: linear-gradient(135deg, #dc2626, #b91c1c);
+      color: #fff;
+    }
+
+    .btn-red:hover {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      transform: translateY(-2px);
+    }
+
+    .btn-green {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+    }
+
+    .btn-green:hover {
+      background: linear-gradient(135deg, #34d399, #10b981);
+      transform: translateY(-2px);
+    }
+
+    @keyframes fadeInScreen {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Modal dialog (Help / Rules) */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      max-width: 480px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-card h2 {
+      font-size: 1.25rem;
+      color: var(--accent-gold);
+      margin-bottom: 12px;
+    }
+
+    .modal-card p, .modal-card li {
+      font-size: 0.88rem;
+      line-height: 1.45;
+      color: #d1d5db;
+      margin-bottom: 8px;
+    }
+
+    .modal-card ul {
+      margin-left: 20px;
+      margin-bottom: 16px;
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1f2937;
+      border: 1px solid var(--accent-gold);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      z-index: 300;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 480px) {
+      .key-btn {
+        height: 40px;
+        font-size: 0.85rem;
+      }
+      .letter-slot {
+        width: 28px;
+        height: 38px;
+        font-size: 1.25rem;
+      }
+      #hangmanCanvas {
+        width: 190px;
+        height: 155px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-icon">A</div>
+      <h1>Ahorcado Pro</h1>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="btnSoundToggle" title="Activar/Desactivar Sonido">
+        <span id="soundIcon">🔊</span> Sonido
+      </button>
+      <button class="icon-btn" id="btnHelp" title="Reglas y Dificultades">
+        ℹ️ Ayuda
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Controls Bar -->
+    <section class="controls-panel">
+      <div class="control-group">
+        <label for="selectCategory">Categoría</label>
+        <select id="selectCategory">
+          <option value="comidas">🍲 Comidas</option>
+          <option value="paises">🌍 Países</option>
+          <option value="trabajos">💼 Trabajos</option>
+          <option value="bebidas">🍹 Bebidas</option>
+          <option value="utensilios">🛠️ Utensilios</option>
+          <option value="animales">🦁 Animales</option>
+          <option value="deportes">⚽ Deportes</option>
+          <option value="ciencia">🔬 Ciencia</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="selectDifficulty">Dificultad (5 Niveles)</label>
+        <select id="selectDifficulty">
+          <option value="1">Nivel 1: Muy Fácil (8 vidas)</option>
+          <option value="2">Nivel 2: Fácil (7 vidas)</option>
+          <option value="3" selected>Nivel 3: Medio (6 vidas)</option>
+          <option value="4">Nivel 4: Difícil (5 vidas)</option>
+          <option value="5">Nivel 5: Experto (4 vidas)</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Stats strip -->
+    <section class="stats-strip">
+      <div class="stat-pill">
+        <div class="val" id="statScore">0</div>
+        <div class="lbl">Puntos</div>
+      </div>
+      <div class="stat-pill">
+        <div class="val" id="statStreak">0</div>
+        <div class="lbl">Racha</div>
+      </div>
+      <div class="stat-pill">
+        <div class="val" id="statWins">0</div>
+        <div class="lbl">Victorias</div>
+      </div>
+      <div class="stat-pill">
+        <div class="val" id="statLosses">0</div>
+        <div class="lbl">Derrotas</div>
+      </div>
+    </section>
+
+    <!-- Hangman Drawing & Secret Word Stage -->
+    <section class="stage-section">
+      <div class="stage-header">
+        <div class="category-badge" id="categoryBadge">🍲 Comidas</div>
+        <div class="attempts-badge" id="attemptsBadge">
+          Intentos: <span id="attemptsLeft">6</span> / <span id="maxAttempts">6</span>
+        </div>
+      </div>
+
+      <!-- Hangman Graphic Canvas -->
+      <canvas id="hangmanCanvas" width="300" height="240"></canvas>
+
+      <!-- Secret Word Slots -->
+      <div class="word-area" id="wordArea"></div>
+    </section>
+
+    <!-- Virtual On-screen Keyboard -->
+    <section class="keyboard-container" id="keyboardContainer"></section>
+
+    <!-- Utility Actions -->
+    <section class="utility-bar">
+      <button class="utility-btn" id="btnHint">
+        💡 Pista (-25 pts)
+      </button>
+      <button class="utility-btn primary" id="btnRestart">
+        🔄 Nueva Palabra
+      </button>
+    </section>
+  </main>
+
+  <!-- VICTORY FULLSCREEN OVERLAY -->
+  <div class="overlay victory" id="victoryOverlay">
+    <canvas id="confettiCanvas"></canvas>
+    <div class="victory-badge">
+      <svg viewBox="0 0 24 24">
+        <path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94.63 1.5 1.98 2.63 3.61 2.96V19H7v2h10v-2h-4v-3.1c1.63-.33 2.98-1.46 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/>
+      </svg>
+    </div>
+    <div class="victory-title">¡VICTORIA!</div>
+    <div class="victory-sub" id="victoryWordRevealed">¡Has adivinado la palabra!</div>
+    <div class="overlay-actions">
+      <button class="action-btn btn-green" id="btnNextWordWin">
+        🎮 Siguiente Palabra
+      </button>
+    </div>
+  </div>
+
+  <!-- DEFEAT FULLSCREEN OVERLAY (CALAVERA Y TIBIAS CRUZADAS) -->
+  <div class="overlay defeat" id="defeatOverlay">
+    <div class="defeat-skull-container">
+      <!-- SVG CALAVERA CON TIBIAS CRUZADAS INTEGRADO -->
+      <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="skullBoneGrad" cx="45%" cy="40%" r="60%">
+            <stop offset="0%" stop-color="#ffffff" />
+            <stop offset="70%" stop-color="#d4d4d8" />
+            <stop offset="100%" stop-color="#71717a" />
+          </radialGradient>
+          <radialGradient id="eyeSocketGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ef4444" />
+            <stop offset="35%" stop-color="#7f1d1d" />
+            <stop offset="100%" stop-color="#000000" />
+          </radialGradient>
+          <filter id="evilGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+        </defs>
+
+        <!-- Tibia Cruzada 1 (Diagonal Superior Izquierda a Inferior Derecha) -->
+        <g stroke="#18181b" stroke-width="2.5" fill="url(#skullBoneGrad)">
+          <!-- Cabeza de hueso sup izq -->
+          <circle cx="36" cy="36" r="13" />
+          <circle cx="48" cy="24" r="13" />
+          <!-- Eje hueso -->
+          <path d="M 42 36 L 158 164" stroke="url(#skullBoneGrad)" stroke-width="17" stroke-linecap="round" />
+          <!-- Cabeza de hueso inf der -->
+          <circle cx="164" cy="164" r="13" />
+          <circle cx="176" cy="152" r="13" />
+        </g>
+
+        <!-- Tibia Cruzada 2 (Diagonal Superior Derecha a Inferior Izquierda) -->
+        <g stroke="#18181b" stroke-width="2.5" fill="url(#skullBoneGrad)">
+          <!-- Cabeza de hueso sup der -->
+          <circle cx="164" cy="36" r="13" />
+          <circle cx="152" cy="24" r="13" />
+          <!-- Eje hueso -->
+          <path d="M 158 36 L 42 164" stroke="url(#skullBoneGrad)" stroke-width="17" stroke-linecap="round" />
+          <!-- Cabeza de hueso inf izq -->
+          <circle cx="36" cy="164" r="13" />
+          <circle cx="24" cy="152" r="13" />
+        </g>
+
+        <!-- Cráneo Principal -->
+        <path d="M 52 82 C 52 40, 148 40, 148 82 C 148 102, 138 114, 132 122 L 132 144 C 132 148, 126 150, 122 150 L 78 150 C 74 150, 68 148, 68 144 L 68 122 C 62 114, 52 102, 52 82 Z"
+              fill="url(#skullBoneGrad)" stroke="#18181b" stroke-width="3" />
+
+        <!-- Sienes y hendiduras temporales -->
+        <path d="M 54 90 C 60 96, 60 110, 68 118" fill="none" stroke="#52525b" stroke-width="2" />
+        <path d="M 146 90 C 140 96, 140 110, 132 118" fill="none" stroke="#52525b" stroke-width="2" />
+
+        <!-- Cuencas Oculares (Ojos con brillo demoníaco rojo) -->
+        <path d="M 68 84 C 68 74, 90 70, 92 84 C 92 98, 70 98, 68 84 Z" fill="url(#eyeSocketGrad)" stroke="#09090b" stroke-width="2" filter="url(#evilGlow)" />
+        <path d="M 132 84 C 132 74, 110 70, 108 84 C 108 98, 130 98, 132 84 Z" fill="url(#eyeSocketGrad)" stroke="#09090b" stroke-width="2" filter="url(#evilGlow)" />
+
+        <!-- Brillo en pupilas rojas -->
+        <circle cx="80" cy="85" r="3" fill="#ff8585" />
+        <circle cx="120" cy="85" r="3" fill="#ff8585" />
+
+        <!-- Cavidad Nasal (Forma de corazón invertido) -->
+        <path d="M 100 98 L 94 112 C 92 116, 96 118, 100 116 C 104 118, 108 116, 106 112 Z" fill="#18181b" />
+
+        <!-- Dientes superiores e inferiores -->
+        <g stroke="#3f3f46" stroke-width="2" fill="#fafafa">
+          <rect x="74" y="130" width="8" height="12" rx="2" />
+          <rect x="84" y="130" width="7.5" height="13" rx="2" />
+          <rect x="93.5" y="130" width="7.5" height="13.5" rx="2" />
+          <rect x="103" y="130" width="7.5" height="13" rx="2" />
+          <rect x="112.5" y="130" width="8" height="12" rx="2" />
+
+          <!-- Fisuras entre dientes -->
+          <line x1="70" y1="140" x2="130" y2="140" stroke="#18181b" stroke-width="2.5" />
+        </g>
+
+        <!-- Grieta del cráneo -->
+        <path d="M 88 44 L 92 56 L 86 64 L 90 72" fill="none" stroke="#27272a" stroke-width="1.8" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <!-- TEXTO EXIGIDO: ESTÁS MUERTO -->
+    <div class="defeat-title">ESTÁS MUERTO</div>
+    <div class="defeat-sub">Se te han agotado todos los intentos</div>
+
+    <div class="revealed-word-box">
+      <span>La palabra oculta era:</span>
+      <strong id="defeatWordRevealed">PALABRA</strong>
+    </div>
+
+    <div class="overlay-actions">
+      <button class="action-btn btn-red" id="btnRestartLoss">
+        💀 Jugar de Nuevo
+      </button>
+    </div>
+  </div>
+
+  <!-- HELP MODAL -->
+  <div class="modal-overlay" id="helpModal">
+    <div class="modal-card">
+      <h2>Reglas & Niveles del Ahorcado</h2>
+      <p>Adivina la palabra oculta letra por letra antes de que se complete el dibujo en la horca.</p>
+      <ul>
+        <li><strong>Nivel 1: Muy Fácil</strong> — Palabras cortas (4-6 letras), <strong>8 intentos</strong>.</li>
+        <li><strong>Nivel 2: Fácil</strong> — Palabras de 5-7 letras, <strong>7 intentos</strong>.</li>
+        <li><strong>Nivel 3: Medio</strong> — Palabras comunes (6-8 letras), <strong>6 intentos</strong>.</li>
+        <li><strong>Nivel 4: Difícil</strong> — Palabras complejas (8-10 letras), <strong>5 intentos</strong>.</li>
+        <li><strong>Nivel 5: Experto</strong> — Palabras largas o desafiantes, solo <strong>4 intentos</strong>.</li>
+      </ul>
+      <p>💡 Las letras con tilde (á, é, í, ó, ú) y la Ñ son automáticamente compatibles con el teclado.</p>
+      <button class="utility-btn primary" id="btnCloseHelp" style="margin-top: 14px; width: 100%;">
+        ¡Entendido!
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Element -->
+  <div class="toast" id="toast"></div>
+
+  <!-- JAVASCRIPT INTEGRADO (100% OFFLINE CON WEB AUDIO API & CANVAS) -->
+  <script>
+    /* =========================================================================
+       1. BASE DE DATOS EXTENSA DE PALABRAS EN CATEGORÍAS (JSON INTERNO)
+       ========================================================================= */
+    const WORD_DATABASE = {
+      comidas: [
+        "PAELLA", "TORTILLA", "GAZPACHO", "CROQUETAS", "EMPANADA", "HAMBURGUESA",
+        "ESPAGUETIS", "GUACAMOLE", "SUSHI", "LASAÑA", "RISOTTO", "CEVICHE",
+        "CANELONES", "PIZZA", "ENSALADA", "ALBONDIGAS", "LENTEJAS", "GARBANZOS",
+        "MACARRONES", "TIRAMISU", "CHURROS", "MAGDALENAS", "FLAN", "NATILLAS",
+        "GUISADO", "FABADA", "PULPO", "CALAMARES", "MEJILLONES", "SALMOREJO",
+        "ARROZ", "TACOS", "BURRITO", "QUESADILLA", "ENCHILADA", "CHURRASCO",
+        "ESTOFADO", "PARRILLADA", "SOLOMILLO", "BACALAO", "MERLUZA", "SALMON",
+        "BERENJENA", "ALCACHOFA", "CALABACIN", "CHAMPIÑONES", "ESPARRAGOS", "PROFITEROL",
+        "ALBARICOQUE", "AGUACATE", "MANZANA", "PLATANO", "ZANAHORIA"
+      ],
+      paises: [
+        "ESPAÑA", "MEXICO", "ARGENTINA", "COLOMBIA", "FRANCIA", "ITALIA",
+        "ALEMANIA", "PORTUGAL", "JAPON", "AUSTRALIA", "CANADA", "BRASIL",
+        "CHILE", "PERU", "URUGUAY", "ECUADOR", "VENEZUELA", "BOLIVIA",
+        "NORUEGA", "SUECIA", "DINAMARCA", "FINLANDIA", "ISLANDIA", "IRLANDA",
+        "ESCOCIA", "GRECIA", "EGIPTO", "MARRUECOS", "TURQUIA", "SUIZA",
+        "AUSTRIA", "BELGICA", "HOLANDA", "POLONIA", "CROACIA", "RUMANIA",
+        "TAILANDIA", "VIETNAM", "INDONESIA", "FILIPINAS", "NUEVA ZELANDA", "COREA",
+        "SINGAPUR", "MADAGASCAR", "SUDAFRICA", "KENIA", "SENEGAL", "GUATEMALA",
+        "COSTA RICA", "PANAMA", "PARAGUAY", "HONDURAS", "SALVADOR"
+      ],
+      trabajos: [
+        "ARQUITECTO", "PROGRAMADOR", "ELECTRICISTA", "CARPINTERO", "MECANICO",
+        "PERIODISTA", "BOMBERO", "ENFERMERO", "CIRUJANO", "ASTRONAUTA",
+        "VETERINARIO", "FOTOGRAFO", "PROFESOR", "ABOGADO", "PANADERO",
+        "COCINERO", "FONTANERO", "AGRICULTOR", "PILOTO", "CONDUCTOR",
+        "DENTISTA", "FARMACEUTICO", "POLICIA", "DISENADOR", "ESCRITOR",
+        "MUSICO", "ESCULTOR", "JUGADOR", "CIENTIFICO", "ASTRONOMO",
+        "BIOLOGO", "GEOLOGO", "ECONOMISTA", "CONTADOR", "SECRETARIO",
+        "TRADUCTOR", "PSICOLOGO", "ALBANIL", "CAMARERO", "AZAFATA",
+        "CARTERO", "BIBLIOTECARIO", "ARQUEOLOGO", "JARDINERO", "ACTOR"
+      ],
+      bebidas: [
+        "LIMONADA", "CHOCOLATE", "HORCHATA", "CAFE", "TE", "BATIDO",
+        "CERVEZA", "VINO", "SIDRA", "ZUMO", "AGUA", "MOJITO",
+        "SANGRIA", "CHAMPAN", "KOMBUCHA", "INFUSION", "COCTEL", "LICOR",
+        "MANZANILLA", "REFRESCO", "MALTEADA", "GRANIZADO", "CLERICO", "APEROL",
+        "TEQUILA", "RON", "WHISKY", "GINEBRA", "VODKA", "VERMUT",
+        "CARAJILLO", "ESPRESSO", "CAPUCHINO", "MANATIAL", "GASEOSA", "TONICA"
+      ],
+      utensilios: [
+        "SARTEN", "CUCHARA", "TENEDOR", "CUCHILLO", "DESTORNILLADOR",
+        "MARTILLO", "TIJERAS", "SACACORCHOS", "LLAVE", "COLADOR",
+        "ESPATULA", "TALADRO", "RALLADOR", "SERRUCHO", "ALICATES",
+        "CACEROLA", "OLLA", "TABLA", "CAZO", "PINZAS",
+        "PELADOR", "MORTERO", "RODILLO", "BATIDORA", "ESCURRIDOR",
+        "BROCHA", "PALA", "RASTRILLO", "LLAVE INGLESA", "NIVEL", "METRO"
+      ],
+      animales: [
+        "ELEFANTE", "JIRAFA", "COCODRILO", "DELFIN", "AGUILA", "CANGURO",
+        "LEOPARDO", "RINOCERONTE", "HIPOPOTAMO", "PINGÜINO", "BALLENA", "CAMALEON",
+        "FLAMENCO", "PANDA", "GUEPARDO", "GORILA", "CHIMPANCE", "KOALA",
+        "TORTUGA", "IGUANA", "SERPIENTE", "LEON", "TIGRE", "LOBO",
+        "OSO", "ZORRO", "CABALLO", "CEBRA", "ARDILLA", "MURCIELAGO"
+      ],
+      deportes: [
+        "BALONCESTO", "FUTBOL", "NATACION", "ATLETISMO", "CICLISMO", "VOLEIBOL",
+        "TENIS", "ESCALADA", "PIRAGÜISMO", "ESQUI", "GIMNASIA", "BOXEO",
+        "SURF", "RUGBY", "BEISBOL", "GOLF", "PATINAJE", "JUDO",
+        "ESGRIMA", "TRIATLON", "BADMINTON", "REMO", "HALTEROFILIA", "TAEKWONDO"
+      ],
+      ciencia: [
+        "ASTRONOMIA", "GENETICA", "MOLECULA", "GRAVEDAD", "VELOCIDAD",
+        "ATMOSFERA", "EVOLUCION", "QUIMICA", "BIOLOGIA", "PLANETA",
+        "GALAXIA", "TELESCOPIO", "FOSIL", "ELECTRON", "NEUTRON", "PROTON",
+        "FOTOSINTESIS", "ECLIPSE", "METEORITO", "SUPERNOVA", "UNIVERSO", "ROBOTICA"
+      ]
+    };
+
+    /* Dificultad: configuración de intentos y filtros de longitud */
+    const DIFFICULTY_SETTINGS = {
+      1: { name: "Muy Fácil", maxErrors: 8, minLen: 4, maxLen: 6 },
+      2: { name: "Fácil", maxErrors: 7, minLen: 5, maxLen: 7 },
+      3: { name: "Medio", maxErrors: 6, minLen: 6, maxLen: 8 },
+      4: { name: "Difícil", maxErrors: 5, minLen: 7, maxLen: 10 },
+      5: { name: "Experto", maxErrors: 4, minLen: 8, maxLen: 20 }
+    };
+
+    /* =========================================================================
+       2. WEB AUDIO API - EFECTOS SINTETIZADOS NATIVOS (SIN ARCHIVOS EXTERNOS)
+       ========================================================================= */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+
+      initContext() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            this.ctx = new AudioContext();
+          }
+        }
+        if (this.ctx && this.ctx.state === "suspended") {
+          this.ctx.resume();
+        }
+      }
+
+      playLetterHit() {
+        if (!this.enabled) return;
+        this.initContext();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(520, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.15);
+      }
+
+      playLetterMiss() {
+        if (!this.enabled) return;
+        this.initContext();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(240, now);
+        osc.frequency.exponentialRampToValueAtTime(140, now + 0.2);
+
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.24);
+      }
+
+      /* Trompetas triunfales sintetizadas (Fanfarria de Victoria) */
+      playFanfare() {
+        if (!this.enabled) return;
+        this.initContext();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        // Secuencia rítmica de trompeta: Sol3, Do4, Mi4, Sol4 prolongado
+        const notes = [
+          { f: 392.00, t: 0.00, d: 0.14 }, // G4
+          { f: 523.25, t: 0.16, d: 0.14 }, // C5
+          { f: 659.25, t: 0.32, d: 0.16 }, // E5
+          { f: 783.99, t: 0.50, d: 0.70 }, // G5 (sostenido brillante)
+          { f: 1046.50, t: 0.72, d: 0.90 } // C6 (armónico culminante)
+        ];
+
+        notes.forEach(note => {
+          const startTime = now + note.t;
+          const osc1 = this.ctx.createOscillator();
+          const osc2 = this.ctx.createOscillator();
+          const filter = this.ctx.createBiquadFilter();
+          const gain = this.ctx.createGain();
+
+          osc1.type = "sawtooth";
+          osc1.frequency.setValueAtTime(note.f, startTime);
+
+          // Segundo oscilador con leve desafinación para textura de sección de metales
+          osc2.type = "triangle";
+          osc2.frequency.setValueAtTime(note.f * 1.004, startTime);
+
+          filter.type = "lowpass";
+          filter.frequency.setValueAtTime(1200, startTime);
+          filter.frequency.exponentialRampToValueAtTime(4500, startTime + 0.08);
+
+          gain.gain.setValueAtTime(0.001, startTime);
+          gain.gain.linearRampToValueAtTime(0.25, startTime + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.001, startTime + note.d);
+
+          osc1.connect(filter);
+          osc2.connect(filter);
+          filter.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc1.start(startTime);
+          osc2.start(startTime);
+          osc1.stop(startTime + note.d);
+          osc2.stop(startTime + note.d);
+        });
+      }
+
+      /* Sonido de derrota sombrío con descenso y disonancia */
+      playDefeatSound() {
+        if (!this.enabled) return;
+        this.initContext();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+
+        // Trombón triste descendente
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(260, now);
+        osc.frequency.linearRampToValueAtTime(180, now + 0.35);
+        osc.frequency.linearRampToValueAtTime(120, now + 0.8);
+        osc.frequency.linearRampToValueAtTime(80, now + 1.4);
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 1.5);
+
+        // Golpe sordo de fondo (bombo fúnebre)
+        const subOsc = this.ctx.createOscillator();
+        const subGain = this.ctx.createGain();
+        subOsc.type = "sine";
+        subOsc.frequency.setValueAtTime(90, now + 0.1);
+        subOsc.frequency.exponentialRampToValueAtTime(35, now + 1.0);
+        subGain.gain.setValueAtTime(0.4, now + 0.1);
+        subGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+        subOsc.connect(subGain);
+        subGain.connect(this.ctx.destination);
+        subOsc.start(now + 0.1);
+        subOsc.stop(now + 1.2);
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    /* =========================================================================
+       3. ANIMACIÓN DE CONFETI EN CANVAS (VICTORIA)
+       ========================================================================= */
+    class ConfettiManager {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext("2d");
+        this.particles = [];
+        this.animationId = null;
+        this.resize();
+        window.addEventListener("resize", () => this.resize());
+      }
+
+      resize() {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+      }
+
+      burst() {
+        this.particles = [];
+        const count = 140;
+        const colors = ["#fbbf24", "#10b981", "#3b82f6", "#ec4899", "#8b5cf6", "#f97316", "#ffffff"];
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 12 + 4;
+          this.particles.push({
+            x: centerX,
+            y: centerY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed - 4,
+            size: Math.random() * 8 + 5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            rotSpeed: (Math.random() - 0.5) * 10,
+            opacity: 1,
+            gravity: 0.28,
+            drag: 0.985
+          });
+        }
+
+        if (this.animationId) cancelAnimationFrame(this.animationId);
+        this.loop();
+      }
+
+      loop() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        let active = false;
+
+        for (const p of this.particles) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += p.gravity;
+          p.vx *= p.drag;
+          p.rotation += p.rotSpeed;
+          p.opacity -= 0.005;
+
+          if (p.opacity > 0 && p.y < this.canvas.height + 50) {
+            active = true;
+            this.ctx.save();
+            this.ctx.globalAlpha = Math.max(0, p.opacity);
+            this.ctx.translate(p.x, p.y);
+            this.ctx.rotate((p.rotation * Math.PI) / 180);
+            this.ctx.fillStyle = p.color;
+            this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+            this.ctx.restore();
+          }
+        }
+
+        if (active) {
+          this.animationId = requestAnimationFrame(() => this.loop());
+        } else {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+      }
+
+      stop() {
+        if (this.animationId) {
+          cancelAnimationFrame(this.animationId);
+          this.animationId = null;
+        }
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.particles = [];
+      }
+    }
+
+    const confetti = new ConfettiManager("confettiCanvas");
+
+    /* =========================================================================
+       4. DIBUJO DINÁMICO DEL AHORCADO EN CANVAS (SIN IMÁGENES EXTERNAS)
+       ========================================================================= */
+    class HangmanCanvasRenderer {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext("2d");
+      }
+
+      render(mistakes, maxErrors) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        // Estilo general de dibujo
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+
+        // Mapear los errores acumulados a las etapas de dibujo según maxErrors (4 a 8)
+        const progress = Math.min(mistakes / maxErrors, 1.0);
+
+        // Coordenadas base
+        const baseX = 40;
+        const baseY = 210;
+        const poleX = 75;
+        const topY = 35;
+        const beamEndX = 180;
+        const ropeLength = 35;
+
+        // 1. Base / Colina de soporte
+        if (mistakes >= 1 || progress >= 0.12) {
+          ctx.strokeStyle = "#475569";
+          ctx.lineWidth = 6;
+          ctx.beginPath();
+          ctx.moveTo(baseX - 15, baseY);
+          ctx.lineTo(baseX + 75, baseY);
+          ctx.stroke();
+
+          // Detalle de césped / piedras
+          ctx.strokeStyle = "#334155";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(baseX + 10, baseY);
+          ctx.lineTo(baseX + 15, baseY - 6);
+          ctx.moveTo(baseX + 45, baseY);
+          ctx.lineTo(baseX + 50, baseY - 7);
+          ctx.stroke();
+        }
+
+        // 2. Poste vertical
+        if (mistakes >= 2 || progress >= 0.25) {
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.moveTo(poleX, baseY);
+          ctx.lineTo(poleX, topY);
+          ctx.stroke();
+        }
+
+        // 3. Viga superior y soporte diagonal
+        if (mistakes >= 3 || progress >= 0.38) {
+          ctx.strokeStyle = "#94a3b8";
+          ctx.lineWidth = 7;
+          ctx.beginPath();
+          ctx.moveTo(poleX - 5, topY);
+          ctx.lineTo(beamEndX + 5, topY);
+          ctx.stroke();
+
+          // Soporte diagonal
+          ctx.lineWidth = 5;
+          ctx.beginPath();
+          ctx.moveTo(poleX, topY + 35);
+          ctx.lineTo(poleX + 35, topY);
+          ctx.stroke();
+        }
+
+        // 4. Cuerda con nudo corredizo
+        if (mistakes >= 4 || progress >= 0.50) {
+          ctx.strokeStyle = "#fbbf24";
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.moveTo(beamEndX, topY);
+          ctx.lineTo(beamEndX, topY + ropeLength);
+          ctx.stroke();
+
+          // Nudo corredizo
+          ctx.fillStyle = "#d97706";
+          ctx.beginPath();
+          ctx.arc(beamEndX, topY + ropeLength, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        const headY = topY + ropeLength + 18;
+        const headR = 17;
+
+        // 5. Cabeza del ahorcado (con expresión facial dinámica según salud)
+        if (mistakes >= 5 || progress >= 0.62) {
+          ctx.strokeStyle = "#f3f4f6";
+          ctx.lineWidth = 3.5;
+          ctx.fillStyle = "#1e293b";
+          ctx.beginPath();
+          ctx.arc(beamEndX, headY, headR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+
+          // Expresión de la cara:
+          if (mistakes >= maxErrors) {
+            // Ojos en cruz (muerto)
+            ctx.strokeStyle = "#ef4444";
+            ctx.lineWidth = 2;
+            // Ojo izquierdo
+            ctx.beginPath();
+            ctx.moveTo(beamEndX - 9, headY - 5);
+            ctx.lineTo(beamEndX - 3, headY + 1);
+            ctx.moveTo(beamEndX - 3, headY - 5);
+            ctx.lineTo(beamEndX - 9, headY + 1);
+            // Ojo derecho
+            ctx.moveTo(beamEndX + 3, headY - 5);
+            ctx.lineTo(beamEndX + 9, headY + 1);
+            ctx.moveTo(beamEndX + 9, headY - 5);
+            ctx.lineTo(beamEndX + 3, headY + 1);
+            ctx.stroke();
+
+            // Boca caída en zigzag
+            ctx.beginPath();
+            ctx.moveTo(beamEndX - 7, headY + 9);
+            ctx.lineTo(beamEndX, headY + 6);
+            ctx.lineTo(beamEndX + 7, headY + 9);
+            ctx.stroke();
+          } else {
+            // Ojos angustiados
+            ctx.fillStyle = "#e2e8f0";
+            ctx.beginPath();
+            ctx.arc(beamEndX - 6, headY - 2, 2, 0, Math.PI * 2);
+            ctx.arc(beamEndX + 6, headY - 2, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Boca preocupada / sorprendida
+            ctx.strokeStyle = "#e2e8f0";
+            ctx.lineWidth = 1.8;
+            ctx.beginPath();
+            ctx.arc(beamEndX, headY + 7, 4, 0, Math.PI, true);
+            ctx.stroke();
+          }
+        }
+
+        const neckY = headY + headR;
+        const torsoEndY = neckY + 45;
+
+        // 6. Torso
+        if (mistakes >= 6 || progress >= 0.75) {
+          ctx.strokeStyle = "#f3f4f6";
+          ctx.lineWidth = 3.5;
+          ctx.beginPath();
+          ctx.moveTo(beamEndX, neckY);
+          ctx.lineTo(beamEndX, torsoEndY);
+          ctx.stroke();
+        }
+
+        // 7. Brazos
+        if (mistakes >= 7 || progress >= 0.88) {
+          ctx.strokeStyle = "#f3f4f6";
+          ctx.lineWidth = 3.5;
+          // Brazo izquierdo
+          ctx.beginPath();
+          ctx.moveTo(beamEndX, neckY + 12);
+          ctx.lineTo(beamEndX - 26, neckY + 28);
+          ctx.stroke();
+
+          // Brazo derecho
+          ctx.beginPath();
+          ctx.moveTo(beamEndX, neckY + 12);
+          ctx.lineTo(beamEndX + 26, neckY + 28);
+          ctx.stroke();
+        }
+
+        // 8. Piernas
+        if (mistakes >= maxErrors || progress >= 1.0) {
+          ctx.strokeStyle = "#f3f4f6";
+          ctx.lineWidth = 3.5;
+          // Pierna izquierda
+          ctx.beginPath();
+          ctx.moveTo(beamEndX, torsoEndY);
+          ctx.lineTo(beamEndX - 22, torsoEndY + 36);
+          ctx.stroke();
+
+          // Pierna derecha
+          ctx.beginPath();
+          ctx.moveTo(beamEndX, torsoEndY);
+          ctx.lineTo(beamEndX + 22, torsoEndY + 36);
+          ctx.stroke();
+        }
+      }
+    }
+
+    const hangmanRenderer = new HangmanCanvasRenderer("hangmanCanvas");
+
+    /* =========================================================================
+       5. LÓGICA PRINCIPAL DEL JUEGO
+       ========================================================================= */
+    class HangmanGame {
+      constructor() {
+        this.category = "comidas";
+        this.difficulty = 3;
+        this.secretWord = "";
+        this.normalizedWord = "";
+        this.guessedLetters = new Set();
+        this.mistakes = 0;
+        this.maxErrors = 6;
+        this.gameOver = false;
+        this.score = 0;
+        this.streak = 0;
+        this.wins = 0;
+        this.losses = 0;
+
+        this.initUI();
+        this.bindEvents();
+        this.startNewGame();
+      }
+
+      initUI() {
+        this.elCategory = document.getElementById("selectCategory");
+        this.elDifficulty = document.getElementById("selectDifficulty");
+        this.elAttemptsLeft = document.getElementById("attemptsLeft");
+        this.elMaxAttempts = document.getElementById("maxAttempts");
+        this.elAttemptsBadge = document.getElementById("attemptsBadge");
+        this.elCategoryBadge = document.getElementById("categoryBadge");
+        this.elWordArea = document.getElementById("wordArea");
+        this.elKeyboard = document.getElementById("keyboardContainer");
+        this.elStatScore = document.getElementById("statScore");
+        this.elStatStreak = document.getElementById("statStreak");
+        this.elStatWins = document.getElementById("statWins");
+        this.elStatLosses = document.getElementById("statLosses");
+
+        this.elVictoryOverlay = document.getElementById("victoryOverlay");
+        this.elDefeatOverlay = document.getElementById("defeatOverlay");
+        this.elDefeatWordRevealed = document.getElementById("defeatWordRevealed");
+        this.elVictoryWordRevealed = document.getElementById("victoryWordRevealed");
+
+        this.renderKeyboard();
+      }
+
+      renderKeyboard() {
+        // Distribución tipo QWERTY adaptada para español con la Ñ
+        const rows = [
+          ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
+          ["A", "S", "D", "F", "G", "H", "J", "K", "L", "Ñ"],
+          ["Z", "X", "C", "V", "B", "N", "M"]
+        ];
+
+        this.elKeyboard.innerHTML = "";
+        rows.forEach(row => {
+          const rowDiv = document.createElement("div");
+          rowDiv.className = "keyboard-row";
+          row.forEach(letter => {
+            const btn = document.createElement("button");
+            btn.className = "key-btn";
+            btn.textContent = letter;
+            btn.dataset.letter = letter;
+            btn.addEventListener("click", () => this.handleGuess(letter));
+            rowDiv.appendChild(btn);
+          });
+          this.elKeyboard.appendChild(rowDiv);
+        });
+      }
+
+      bindEvents() {
+        this.elCategory.addEventListener("change", (e) => {
+          this.category = e.target.value;
+          this.startNewGame();
+        });
+
+        this.elDifficulty.addEventListener("change", (e) => {
+          this.difficulty = parseInt(e.target.value, 10);
+          this.startNewGame();
+        });
+
+        document.getElementById("btnRestart").addEventListener("click", () => {
+          this.startNewGame();
+        });
+
+        document.getElementById("btnNextWordWin").addEventListener("click", () => {
+          this.elVictoryOverlay.style.display = "none";
+          confetti.stop();
+          this.startNewGame();
+        });
+
+        document.getElementById("btnRestartLoss").addEventListener("click", () => {
+          this.elDefeatOverlay.style.display = "none";
+          this.startNewGame();
+        });
+
+        document.getElementById("btnHint").addEventListener("click", () => {
+          this.provideHint();
+        });
+
+        document.getElementById("btnSoundToggle").addEventListener("click", () => {
+          sound.enabled = !sound.enabled;
+          document.getElementById("soundIcon").textContent = sound.enabled ? "🔊" : "🔇";
+          this.showToast(sound.enabled ? "Sonido activado" : "Sonido desactivado");
+        });
+
+        document.getElementById("btnHelp").addEventListener("click", () => {
+          document.getElementById("helpModal").style.display = "flex";
+        });
+
+        document.getElementById("btnCloseHelp").addEventListener("click", () => {
+          document.getElementById("helpModal").style.display = "none";
+        });
+
+        // Soporte para teclado físico del dispositivo / PC
+        window.addEventListener("keydown", (e) => {
+          if (this.gameOver) return;
+          const key = e.key.toUpperCase();
+          if (key === "BACKSPACE" || key === "TAB") return;
+          if (key === "ENTER") {
+            if (this.elVictoryOverlay.style.display === "flex") {
+              document.getElementById("btnNextWordWin").click();
+            } else if (this.elDefeatOverlay.style.display === "flex") {
+              document.getElementById("btnRestartLoss").click();
+            }
+            return;
+          }
+
+          // Letras válidas en español (A-Z y Ñ)
+          if (/^[A-ZÑ]$/.test(key)) {
+            this.handleGuess(key);
+          }
+        });
+      }
+
+      /* Normalizar cadenas (quitar tildes pero mantener Ñ) */
+      normalizeText(str) {
+        return str
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, (m) => "")
+          .toUpperCase();
+      }
+
+      startNewGame() {
+        this.gameOver = false;
+        this.guessedLetters.clear();
+        this.mistakes = 0;
+
+        const config = DIFFICULTY_SETTINGS[this.difficulty];
+        this.maxErrors = config.maxErrors;
+
+        // Seleccionar palabra adecuada al nivel de dificultad
+        const list = WORD_DATABASE[this.category] || WORD_DATABASE.comidas;
+        const filtered = list.filter(w => {
+          const clean = w.replace(/\s+/g, "");
+          return clean.length >= config.minLen && clean.length <= config.maxLen;
+        });
+
+        const pool = filtered.length > 0 ? filtered : list;
+        this.secretWord = pool[Math.floor(Math.random() * pool.length)].toUpperCase();
+        this.normalizedWord = this.normalizeText(this.secretWord);
+
+        // Actualizar badges
+        const catLabels = {
+          comidas: "🍲 Comidas",
+          paises: "🌍 Países",
+          trabajos: "💼 Trabajos",
+          bebidas: "🍹 Bebidas",
+          utensilios: "🛠️ Utensilios",
+          animales: "🦁 Animales",
+          deportes: "⚽ Deportes",
+          ciencia: "🔬 Ciencia"
+        };
+        this.elCategoryBadge.textContent = catLabels[this.category] || this.category;
+        this.updateAttemptsDisplay();
+
+        // Limpiar overlays
+        this.elVictoryOverlay.style.display = "none";
+        this.elDefeatOverlay.style.display = "none";
+        confetti.stop();
+
+        // Resetear teclado
+        document.querySelectorAll(".key-btn").forEach(btn => {
+          btn.className = "key-btn";
+          btn.disabled = false;
+        });
+
+        // Dibujar estado inicial
+        this.renderWordSlots();
+        hangmanRenderer.render(0, this.maxErrors);
+      }
+
+      updateAttemptsDisplay() {
+        const left = Math.max(0, this.maxErrors - this.mistakes);
+        this.elAttemptsLeft.textContent = left;
+        this.elMaxAttempts.textContent = this.maxErrors;
+
+        if (left <= 2) {
+          this.elAttemptsBadge.classList.add("danger");
+        } else {
+          this.elAttemptsBadge.classList.remove("danger");
+        }
+      }
+
+      renderWordSlots() {
+        this.elWordArea.innerHTML = "";
+        for (let i = 0; i < this.secretWord.length; i++) {
+          const char = this.secretWord[i];
+          const normChar = this.normalizedWord[i];
+
+          const slot = document.createElement("div");
+          if (char === " ") {
+            slot.className = "letter-slot space";
+          } else {
+            slot.className = "letter-slot";
+            if (this.guessedLetters.has(normChar)) {
+              slot.textContent = char;
+              slot.classList.add("revealed");
+            } else {
+              slot.textContent = "";
+            }
+          }
+          this.elWordArea.appendChild(slot);
+        }
+      }
+
+      handleGuess(letter) {
+        if (this.gameOver) return;
+        const normLetter = this.normalizeText(letter);
+        if (this.guessedLetters.has(normLetter)) return;
+
+        this.guessedLetters.add(normLetter);
+        const btn = document.querySelector(`.key-btn[data-letter="${letter}"]`);
+
+        if (this.normalizedWord.includes(normLetter)) {
+          // ACIERTO
+          sound.playLetterHit();
+          if (btn) btn.classList.add("correct");
+          this.renderWordSlots();
+          this.checkWinCondition();
+        } else {
+          // FALLO
+          this.mistakes++;
+          sound.playLetterMiss();
+          if (btn) btn.classList.add("wrong");
+          this.updateAttemptsDisplay();
+          hangmanRenderer.render(this.mistakes, this.maxErrors);
+          this.checkLossCondition();
+        }
+      }
+
+      checkWinCondition() {
+        // Verificar si todas las letras están descubiertas
+        let won = true;
+        for (let i = 0; i < this.secretWord.length; i++) {
+          const char = this.secretWord[i];
+          if (char === " ") continue;
+          const norm = this.normalizedWord[i];
+          if (!this.guessedLetters.has(norm)) {
+            won = false;
+            break;
+          }
+        }
+
+        if (won) {
+          this.gameOver = true;
+          this.wins++;
+          this.streak++;
+          // Calcular puntos: base 100 * dificultad + bonus por intentos restantes
+          const pointsEarned = (100 * this.difficulty) + ((this.maxErrors - this.mistakes) * 20);
+          this.score += pointsEarned;
+          this.updateStats();
+
+          // Reproducir Fanfarria de Trompetas y Disparar Confeti
+          setTimeout(() => {
+            sound.playFanfare();
+            this.elVictoryWordRevealed.textContent = `¡"${this.secretWord}" es correcto! (+${pointsEarned} pts)`;
+            this.elVictoryOverlay.style.display = "flex";
+            confetti.burst();
+          }, 350);
+        }
+      }
+
+      checkLossCondition() {
+        if (this.mistakes >= this.maxErrors) {
+          this.gameOver = true;
+          this.losses++;
+          this.streak = 0;
+          this.updateStats();
+
+          // Reproducir sonido de derrota y mostrar pantalla completa con calavera y texto ESTÁS MUERTO
+          setTimeout(() => {
+            sound.playDefeatSound();
+            this.elDefeatWordRevealed.textContent = this.secretWord;
+            this.elDefeatOverlay.style.display = "flex";
+          }, 450);
+        }
+      }
+
+      provideHint() {
+        if (this.gameOver) return;
+        if (this.score < 25) {
+          this.showToast("Necesitas al menos 25 puntos para pedir una pista");
+          return;
+        }
+
+        // Buscar letras no adivinadas
+        const unrevealed = [];
+        for (let i = 0; i < this.normalizedWord.length; i++) {
+          const char = this.normalizedWord[i];
+          if (char !== " " && !this.guessedLetters.has(char)) {
+            unrevealed.push(char);
+          }
+        }
+
+        if (unrevealed.length > 0) {
+          this.score -= 25;
+          this.updateStats();
+          const hintLetter = unrevealed[Math.floor(Math.random() * unrevealed.length)];
+          this.showToast(`Pista revelada: Letra ${hintLetter}`);
+          this.handleGuess(hintLetter);
+        }
+      }
+
+      updateStats() {
+        this.elStatScore.textContent = this.score;
+        this.elStatStreak.textContent = this.streak;
+        this.elStatWins.textContent = this.wins;
+        this.elStatLosses.textContent = this.losses;
+      }
+
+      showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 2200);
+      }
+    }
+
+    // Inicializar juego al cargar la página
+    window.addEventListener("DOMContentLoaded", () => {
+      new HangmanGame();
+    });
+  </script>
+</body>
+</html>

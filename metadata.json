@@ -1,0 +1,6 @@
+{
+  "name": "Ahorcado",
+  "description": "Juego clásico del Ahorcado offline con categorías temáticas, 5 niveles de dificultad, sintetizador Web Audio y animaciones interactivas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
